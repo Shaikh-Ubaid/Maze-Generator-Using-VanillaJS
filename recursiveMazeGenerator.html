@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive Maze Generator</title>
+    <style>
+        .container {
+            /* display: flex;
+            align-items: center;
+            justify-content: center; */
+            margin: auto;
+        }
+        
+        .heading {
+            text-align: center;
+        }
+        
+        .maze {
+            margin: auto;
+        }
+        
+        .maze-cell {
+            width: 60px;
+            height: 60px;
+            float: left;
+        }
+        
+        .maze-upper-boundary {
+            width: 60px;
+            float: left;
+        }
+        .maze-left-boundary {
+            width: 30px;
+            float:left;
+        }
+        
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: white;
+        }
+        
+        .wall {
+            background-color: black;
+        }
+        
+        .left {
+            float: left;
+        }
+        
+        .right {
+            float: right;
+        }
+        
+        .bottom {
+            clear: both;
+            float: left;
+        }
+        
+        .corner {
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="heading">
+            <h1>Recursive Maze Generator</h1>
+            <h3>S - Start</h3>
+            <h3>E - End</h3>
+            <h4>Go from S to E</h4>
+        </div>
+        <div class="maze">
+        </div>
+    </div>
+
+
+
+    <script>
+        var grid = [];
+        var mazeGrid = [];
+        var w = 15;
+        var h = 10;
+        document.querySelector('.maze').style.width = (w * 60+30) + "px";
+
+        function shuffle(array) {
+            var currentIndex = array.length,
+                temporaryValue, randomIndex;
+
+            // While there remain elements to shuffle...
+            while (0 !== currentIndex) {
+
+                // Pick a remaining element...
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex -= 1;
+
+                // And swap it with the current element.
+                temporaryValue = array[currentIndex];
+                array[currentIndex] = array[randomIndex];
+                array[randomIndex] = temporaryValue;
+            }
+
+            return array;
+        }
+
+        function cell(y, x) {
+            this.visited = false;
+            let neighbours = [];
+            if (x - 1 >= 0) neighbours.push([y, x - 1])
+            if (x + 1 < w) neighbours.push([y, x + 1])[1]
+            if (y + 1 < h) neighbours.push([y + 1, x])
+            if (y - 1 >= 0) neighbours.push([y - 1, x]);
+            shuffle(neighbours);
+            this.neighbours = neighbours;
+
+        }
+
+        function createNodeMap() {
+            var leftBoundaryCells = document.createElement("div");
+                leftBoundaryCells.classList.add("maze-left-boundary");
+                leftBoundaryCells.innerHTML = `<div class="cell bottom wall"></div>`;
+                document.querySelector(".maze").appendChild(leftBoundaryCells);
+            for (let x = 0; x < w; x++) {
+                let mazeCell = document.createElement("div");
+                mazeCell.classList.add("maze-upper-boundary");
+                mazeCell.innerHTML = `  <div class="cell wall bottom"></div>
+                                        <div class="cell wall corner"></div>
+                                        <div style="clear: both;"></div>`;
+                document.querySelector(".maze").appendChild(mazeCell);
+            }
+            for (let y = 0; y < h; y++) {
+                mazeGrid.push([]);
+                var leftBoundaryCells = document.createElement("div");
+                leftBoundaryCells.classList.add("maze-left-boundary");
+                leftBoundaryCells.innerHTML = `<div class="cell wall"></div>
+                                        <div class="cell wall"></div>
+                                        <div style="clear: both;"></div>`;
+                document.querySelector(".maze").appendChild(leftBoundaryCells);
+                for (let x = 0; x < w; x++) {
+                    var mazeCell = document.createElement("div");
+                    mazeCell.classList.add("maze-cell");
+                    mazeCell.innerHTML = `<div class="cell left"></div>
+                                        <div class="cell wall right"></div>
+                                        <div class="cell wall bottom"></div>
+                                        <div class="cell wall corner"></div>
+                                        <div style="clear: both;"></div>`;
+                    mazeGrid[y].push(new cell(y, x));
+                    document.querySelector(".maze").appendChild(mazeCell);
+                }
+            }
+            document.querySelector(".maze").innerHTML += `<div style="clear: both;"></div>`;
+        }
+
+        async function recursiveBacktracking(y, x, parentY, parentX) {
+            var direction;
+            if (y != 0 || x != 0) {
+                if (y == parentY) {
+                    if ((x - parentX) == 1) direction = "R";
+                    else direction = "L";
+                }
+                if (x == parentX) {
+                    if ((y - parentY) == 1) direction = "B";
+                    else direction = "T";
+                }
+                if (direction == "R" || direction == "B") {
+                    if (direction == "R") grid[parentY * w + parentX].querySelector(".right").classList.remove("wall");
+                    else grid[parentY * w + parentX].querySelector(".bottom").classList.remove("wall");
+                } else {
+                    if (direction == "L") grid[y * w + x].querySelector(".right").classList.remove("wall");
+                    else grid[y * w + x].querySelector(".bottom").classList.remove("wall");
+                }
+            }
+            // console.log(direction);
+            // console.log(y, x);
+            mazeGrid[y][x].visited = true;
+            for (var i = 0; i < mazeGrid[y][x].neighbours.length; i++) {
+                if (!mazeGrid[mazeGrid[y][x].neighbours[i][0]][mazeGrid[y][x].neighbours[i][1]].visited) {
+                    await recursiveBacktracking(mazeGrid[y][x].neighbours[i][0], mazeGrid[y][x].neighbours[i][1], y, x);
+                }
+            }
+        }
+        createNodeMap();
+        grid = document.querySelectorAll('.maze-cell');
+        recursiveBacktracking(0, 0);
+        document.querySelectorAll('.maze-left-boundary')[1].firstChild.style.backgroundColor="white";
+        document.querySelectorAll('.maze-left-boundary')[1].firstChild.innerHTML="S";
+        grid[(h-1)*w+w-1].querySelector('.right').style.backgroundColor="white";
+        grid[(h-1)*w+w-1].querySelector('.right').innerHTML="E";
+    </script>
+</body>
+
+</html>
