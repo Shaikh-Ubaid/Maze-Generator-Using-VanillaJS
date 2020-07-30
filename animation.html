@@ -15,6 +15,7 @@
         
         .heading {
             text-align: center;
+            margin-bottom: 20px;
         }
         
         .maze {
@@ -64,6 +65,17 @@
         .corner {
             float: right;
         }
+        
+        .demo {
+            float: left;
+            background-color: grey;
+            margin-right: 10px;
+            padding: 2px;
+        }
+        
+        .selected {
+            border: 4px solid black;
+        }
     </style>
 </head>
 
@@ -76,6 +88,15 @@
             <h3>S - Start</h3>
             <h3>E - End</h3>
             <h4>Go from S to E</h4>
+            <div style="display: inline-block">
+                <h3>Select size of each small cell</h3>
+                <div class="demo" style="width: 10px; height: 10px;"></div>
+                <div class="demo" style="width: 20px; height: 20px;"></div>
+                <div class="demo" style="width: 30px; height: 30px;"></div>
+                <div class="demo" style="width: 40px; height: 40px;"></div>
+                <div class="demo" style="width: 50px; height: 50px;"></div>
+                <div style="clear: both;"></div>
+            </div>
         </div>
         <div class="maze">
         </div>
@@ -89,7 +110,42 @@
         var mazeGrid = [];
         var w = 40;
         var h = 40;
-        document.querySelector('.maze').style.width = (w * 60 + 30) + "px";
+        var cellSize = 5;
+        var previousSelected;
+        
+        // document.querySelector('.maze').style.width = (w * 60 + 30) + "px";
+        function reCalculateCellSizes() {
+            document.querySelector('.maze').style.width = (w * 2 * cellSize + cellSize) + "px";
+            document.querySelectorAll('.cell').forEach((item) => {
+                item.style.width = cellSize + "px";
+                item.style.height = cellSize + "px";
+            });
+
+            document.querySelectorAll('.maze-cell').forEach((item) => {
+                item.style.width = 2 * cellSize + "px";
+                item.style.height = 2 * cellSize + "px";
+            });
+            document.querySelectorAll('.maze-upper-boundary').forEach((item) => {
+                item.style.width = 2 * cellSize + "px";
+            });
+            document.querySelectorAll('.maze-left-boundary').forEach((item) => {
+                item.style.width = cellSize + "px";
+            });
+            document.querySelector('.maze').style.fontSize = cellSize + "px";
+        }
+
+        document.querySelectorAll('.demo').forEach((demo) => {
+            demo.addEventListener("click", function() {
+                if (previousSelected)
+                    previousSelected.classList.remove('selected');
+                demo.classList.add('selected');
+                cellSize = demo.style.width;
+                cellSize = Number(cellSize.substring(0, cellSize.length - 2))
+                console.log(cellSize);
+                previousSelected = demo;
+                reCalculateCellSizes();
+            });
+        });
 
         function shuffle(array) {
             var currentIndex = array.length,
@@ -220,6 +276,7 @@
         grid[(h - 1) * w + w - 1].querySelector('.right').style.backgroundColor = "white";
         grid[(h - 1) * w + w - 1].querySelector('.right').innerHTML = "E";
         window.requestAnimationFrame(recursiveBacktracking);
+        reCalculateCellSizes();
     </script>
 </body>
 
